@@ -1,0 +1,39 @@
+name: build-image
+
+on:
+  push:
+    branches:
+      - my-archive-4.14.0
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+
+      - name: install dependencies
+        run: make install
+
+      - name: install setuptools
+        run: |
+          . .venv/bin/activate
+          pip install --upgrade setuptools setuptools_scm
+
+      - name: Build image
+        run: |
+          . .venv/bin/activate
+          make docker-build
